@@ -18,7 +18,8 @@ io.on('connection', (socket) => {
   const username = socket.request.session.user.username;
   console.log(`a user  connected`);
   socket.on('disconnect', () => {
-    io.emit('anounce', ` ${null} has quit`);
+    io.emit('anounce', ` ${username} has quit`);
+    socket.request.session.destroy();
     console.log('user disconnected');
   
   });

@@ -12,6 +12,7 @@ router.post('/login', (req, res) => {
     User.checkUser(user)
     .then(user => {
         req.session.user = user;
+        req.session.save();
         res.redirect('/main');
     })
     .catch(err => {
@@ -21,7 +22,7 @@ router.post('/login', (req, res) => {
 })
 
 router.get('/main', (req, res) => {
-    console.log(1,req.session.user);
+    //console.log(1,req.session.user);
     res.sendFile(path.join(__dirname, '../views/index.html'));
 })
 
