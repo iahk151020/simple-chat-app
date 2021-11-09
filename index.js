@@ -1,46 +1,40 @@
 const express = require('express');
 const app = express();
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
-const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
-const router = require('./route');
+const router = require('./bin/route');
+const bodyParser = require('body-parser');
+// const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const mongoDBstore = require('connect-mongodb-session')(session);
+const dotenv = require('dotenv').config();
+// const cookieSession = require('cookie-session');
 
-app.use('/login',router);
-
-app.get('/main', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+const store = new mongoDBstore({
+    uri: process.env.DBURL,
+    collection: 'sessions'
 });
 
-const users = [];
-
-io.on('connection', (socket) => {
-
- 
-
-  const randomUserName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] });
-
-  
-  users.push(randomUserName);
-  socket.client.userName = randomUserName;
-
-  console.log('a user connected');
-
-  socket.on('disconnect', () => {
-    io.emit('anounce', ` ${socket.client.userName} has quit`);
-    console.log('user disconnected');
+store.on('error', function(error) {
+    console.log(error);
   });
 
-  socket.on('chat message', (msg) => {
-    io.emit('get message', [msg, socket.client.userName]);
-    console.log(`message ${msg} from ${socket.client.userName}`);
+const sessionMW = session({
+    secret: process.env.ssecret,
+    cookie: {
+      maxAge: 1000 * 60 * 60 // 1 hour
+    },
+    store: store,
+    resave: true,
+    saveUninitialized: true
   });
 
-  io.emit('anounce', `welcome ${socket.client.userName} to group chat`);
+app.use(sessionMW);
 
-});
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use('/',router);
 
-server.listen(3000, () => {
-  console.log('listening on *:3000');
-});
+
+module.exports = {
+    app,
+    sessionMW
+}
