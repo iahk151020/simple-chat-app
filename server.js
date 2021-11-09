@@ -7,7 +7,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 const sessionMW = require('./index').sessionMW;
 
-let sockets = [];
+// let sockets = [];
 
 io.use((socket, next) => {
   sessionMW(socket.request, {}, next);
